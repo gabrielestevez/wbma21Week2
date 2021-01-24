@@ -8,6 +8,9 @@ import {
 import Home from '../views/Home';
 import Profile from '../views/Profile';
 import Single from '../views/Single';
+import Login from '../views/Login';
+import {useContext} from 'react/cjs/react.development';
+import {MainContext} from '../contexts/MainContext';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -22,14 +25,23 @@ const TabScreen = () => {
 };
 
 const StackScreen = () => {
+  const [isLoggedIn] = useContext(MainContext);
   return (
     <Stack.Navigator>
-      <Stack.Screen
-        name="Home"
-        component={TabScreen}
-        options={({route}) => ({headerTitle: getFocusedRouteNameFromRoute})}
-      />
-      <Stack.Screen name="Single" component={Single} />
+      {isLoggedIn ? (
+        <>
+          <Stack.Screen
+            name="Home"
+            component={TabScreen}
+            options={({route}) => ({headerTitle: getFocusedRouteNameFromRoute})}
+          />
+          <Stack.Screen name="Single" component={Single} />
+        </>
+      ) : (
+        <>
+          <StackScreen name="Login" component={Login} />
+        </>
+      )}
     </Stack.Navigator>
   );
 };
