@@ -1,13 +1,17 @@
-import React, {useContext} from 'react';
-import {StyleSheet, SafeAreaView, Text, Button} from 'react-native';
+import React, {useContext, useEffect, useState} from 'react';
+import {StyleSheet, Text, Button} from 'react-native';
 import {MainContext} from '../contexts/MainContext';
 import PropTypes from 'prop-types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {Avatar, Card, ListItem} from 'react-native-elements';
+import {ActivityIndicator} from 'react-native';
+import {useTag} from '../hooks/ApiHooks';
+import {uploadsUrl} from '../utils/Variables';
 
 const Profile = ({navigation}) => {
   const {isLoggedIn, setIsLoggedIn, user} = useContext(MainContext);
-  console.log('profile is logged in?', isLoggedIn);
-  console.log('profile user data', user);
+  const [avatar, setAvatar] = useState('http://placekitten.com/640');
+  const {getAvatar} = useTag();
   const logout = async () => {
     setIsLoggedIn(false);
     await AsyncStorage.clear();
@@ -16,14 +20,35 @@ const Profile = ({navigation}) => {
       navigation.navigate('Login');
     }
   };
+
+  useEffect(() => {
+    const fetchAvatar = async () => {
+      try {
+        const avatarList = await getFilesByTag('avatar_' + user.user_id);
+        if(avatarList.length > 0) {
+        setAvatar(uploadsUrl + avatarList.pop().filename);
+        }
+      } catch (error) {
+        console.error(error.message);
+      }
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
-      <Text>Profile</Text>
-      <Text>Name: {user.username}</Text>
-      <Text>Email: {user.email}</Text>
-      {/* <Text>id: {user.user_id}</Text> */}
+    <Card>
+      <Card.Title>
+        <Text h1>{user.username}</Text>
+      </Card.Title>
+      <Card.Image
+        source={{uri: 'http://placekitten.com/400'}}
+        style={styles.image}
+        PlaceholderContent={<ActivityIndicator />}
+      />
+      <ListItem>
+        <Avatar icon={{name: 'user', type: 'font-awensome', color: 'black'}} />
+        <Text>{user.full_name}</Text>
+      </ListItem>
       <Button title={'Logout'} onPress={logout} />
-    </SafeAreaView>
+    </Card>
   );
 };
 

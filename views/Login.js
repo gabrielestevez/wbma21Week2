@@ -1,16 +1,20 @@
-import React, {useContext, useEffect} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {StyleSheet, View, Text} from 'react-native';
 import PropTypes from 'prop-types';
 import {MainContext} from '../contexts/MainContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {useLogin} from '../hooks/ApiHooks';
+import {useUser} from '../hooks/ApiHooks';
 import LoginForm from '../components/LoginForm';
 import RegisterForm from '../components/RegisterForm';
+import {KeyboardAvoidingView} from 'react-native';
+import {Platform} from 'react-native';
+import {Button, Card} from 'react-native-elements';
+import {ScrollView} from 'react-native-gesture-handler';
 
 const Login = ({navigation}) => {
   const {isLoggedIn, setIsLoggedIn, setUser} = useContext(MainContext);
-  console.log('isLoggedIn?', isLoggedIn);
-  const {checkToken} = useLogin();
+  const [formToggle, setFormToggle] = useState(true);
+  const {checkToken} = useUser();
 
   const getToken = async () => {
     const userToken = await AsyncStorage.getItem('userToken');
@@ -30,21 +34,56 @@ const Login = ({navigation}) => {
     getToken();
   }, []);
   return (
-    <View style={styles.container}>
-      <Text>Login</Text>
-      <LoginForm navigation={navigation} />
-      <Text>Register</Text>
-      <RegisterForm navigation={navigation} />
-    </View>
+    <KeyboardAvoidingView
+      behavior={Platform.OS == 'ios' ? 'padding' : 'height'}
+    >
+      <View style={styles.appTitle}>
+        <Text h1>App Name</Text>
+      </View>
+      <View style={styles.form}>
+        <Text style={styles.text}>
+          {formToggle ? 'No account?' : 'Already registered?'}
+        </Text>
+        <Button
+          tittle={formToggle ? 'Register' : 'Login'}
+          onPress={() => {
+            setFormToggle(!formToggle);
+          }}
+        />
+        {formToggle ? (
+          <Card>
+            <Card.Title h4>Login</Card.Title>
+            <Card.Divider />
+            <LoginForm navigation={navigation} />
+          </Card>
+        ) : (
+          <Card>
+            <Card.Title h4>Register</Card.Title>
+            <Card.Divider />
+            <RegisterForm navigation={navigation} />
+          </Card>
+        )}
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    padding: 16,
+  },
+  appTitle: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  form: {
+    flex: 2,
+  },
+  text: {
+    alignSelf: 'center',
+    padding: 20,
   },
 });
 

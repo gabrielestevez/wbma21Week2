@@ -1,5 +1,6 @@
-import React, {useContext, useEffect} from 'react';
-import {View, Button} from 'react-native';
+import React, {useContext, useState} from 'react';
+import {View} from 'react-native';
+import {Button} from 'react-native-elements';
 import PropTypes from 'prop-types';
 import {MainContext} from '../contexts/MainContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -8,37 +9,42 @@ import FormTextInput from './FormTextInput';
 import useLoginForm from '../hooks/LoginHooks';
 
 const LoginForm = ({navigation}) => {
+  const [loading, setLoading] = useState(false);
   const {inputs, handleInputChange} = useLoginForm();
   const {postLogin} = useLogin();
-  const [isLoggedIn, setIsLoggedIn] = useContext(MainContext);
+  const [setUser, setIsLoggedIn] = useContext(MainContext);
+
   const doLogin = async () => {
+    setLoading(true);
     try {
       const userData = await postLogin(inputs);
+      setUser(userData.user);
       setIsLoggedIn(true);
       await AsyncStorage.setItem('userToken', userData.token);
-
+      setLoading(false);
     } catch (error) {
+      setLoading(false);
       console.error('postLogin error', error);
-      // TODO
+      console.error('Invalid username or password');
     }
-  return (
-    <View>
-      <FormTextInput
-        autoCapitalize="none"
-        placeholder="username"
-        onChangeText={(txt) => handleInputChange('username', txt)}
-      />
-      <FormTextInput
-        autoCapitalize="none"
-        placeholder="password"
-        onChangeText={(txt) => handleInputChange('password', txt)}
-        secureTextEntry={true}
-      />
-      <Button title="Login" onPress={doLogin} />
-    </View>
-  );
+    return (
+      <View>
+        <FormTextInput
+          autoCapitalize="none"
+          placeholder="username"
+          onChangeText={(txt) => handleInputChange('username', txt)}
+        />
+        <FormTextInput
+          autoCapitalize="none"
+          placeholder="password"
+          onChangeText={(txt) => handleInputChange('password', txt)}
+          secureTextEntry={true}
+        />
+        <Button title="Login" onPress={doLogin} loading={loading} />
+      </View>
+    );
+  };
 };
-
 
 LoginForm.PropTypes = {
   navigation: PropTypes.object,

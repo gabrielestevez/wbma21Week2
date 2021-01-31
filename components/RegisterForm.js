@@ -1,16 +1,16 @@
-import React, {useContext, useEffect} from 'react';
+import React, {useContext} from 'react';
 import {Alert, Button, View} from 'react-native';
 import PropTypes from 'prop-types';
 import {MainContext} from '../contexts/MainContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {useLogin, useRegister} from '../hooks/ApiHooks';
+import {useLogin, useUser} from '../hooks/ApiHooks';
 import FormTextInput from './FormTextInput';
 import useSignUpForm from '../hooks/RegisterHooks';
 
 const RegisterForm = ({navigation}) => {
   const {setIsLoggedIn, setUser} = useContext(MainContext);
   const {inputs, handleInputChange} = useSignUpForm();
-  const {postRegister} = useRegister();
+  const {postRegister} = useUser();
   const {postLogin} = useLogin();
   const doRegister = async () => {
     try {
@@ -34,6 +34,10 @@ const RegisterForm = ({navigation}) => {
         autoCapitalize="none"
         placeholder="username"
         onChangeText={(txt) => handleInputChange('username', txt)}
+        onEndEditing={(event) => {
+          console.log(event.nativeEvent.text);
+        }}
+        errorMessage="some state variable"
       />
       <FormTextInput
         autoCapitalize="none"
