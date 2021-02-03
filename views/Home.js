@@ -4,8 +4,7 @@ import List from '../components/List';
 import GlobalStyles from '../utils/GlobalStyles';
 import PropTypes from 'prop-types';
 
-const Home = (props) => {
-  const {navigation} = props;
+const Home = ({navigation}) => {
   return (
     <SafeAreaView style={GlobalStyles.droidSafeArea}>
       <List navigation={navigation} />

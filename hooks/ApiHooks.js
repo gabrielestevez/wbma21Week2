@@ -1,14 +1,18 @@
 import {useEffect, useState} from 'react';
-import {baseUrl} from '../utils/Variables';
+import {baseUrl} from '../utils/variables';
 
+// general function for fetching (options default value is empty object)
 const doFetch = async (url, options = {}) => {
   const response = await fetch(url, options);
   const json = await response.json();
   if (json.error) {
-    throw new Error(json.message + ' ' + json.error);
+    // if API response contains error message (use Postman to get further details)
+    throw new Error(json.message + ': ' + json.error);
   } else if (!response.ok) {
+    // if API response does not contain error message, but there is some other error
     throw new Error('doFetch failed');
   } else {
+    // if all goes well
     return json;
   }
 };
@@ -22,15 +26,12 @@ const useLoadMedia = () => {
       const media = await Promise.all(
         listJson.map(async (item) => {
           const fileJson = await doFetch(baseUrl + 'media/' + item.file_id);
-          // console.log('media file data', json);
           return fileJson;
         })
       );
-      console.log('media array data', media);
-
       setMediaArray(media);
     } catch (error) {
-      console.error('loadMedia error', error);
+      console.error('loadMedia error', error.message);
     }
   };
   useEffect(() => {
@@ -43,14 +44,14 @@ const useLogin = () => {
   const postLogin = async (userCredentials) => {
     const options = {
       method: 'POST',
-      header: {'Content-Type': 'application/json'},
+      headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(userCredentials),
     };
     try {
       const userData = await doFetch(baseUrl + 'login', options);
       return userData;
     } catch (error) {
-      throw new Error(error.message);
+      throw new Error('postLogin error: ' + error.message);
     }
   };
 
@@ -59,7 +60,7 @@ const useLogin = () => {
 
 const useUser = () => {
   const postRegister = async (inputs) => {
-    console.log('trying to create a user', inputs);
+    console.log('trying to create user', inputs);
     const fetchOptions = {
       method: 'POST',
       headers: {
@@ -68,16 +69,10 @@ const useUser = () => {
       body: JSON.stringify(inputs),
     };
     try {
-      const response = await doFetch(baseUrl + 'users', fetchOptions);
-      const json = await response.json();
+      const json = await doFetch(baseUrl + 'users', fetchOptions);
       console.log('register resp', json);
-      if (response.ok) {
-        return json;
-      } else {
-        throw new Error(json.message + ': ' + json.error);
-      }
+      return json;
     } catch (e) {
-      console.log('ApiHooks register', e.message);
       throw new Error(e.message);
     }
   };
@@ -86,7 +81,7 @@ const useUser = () => {
     try {
       const options = {
         method: 'GET',
-        header: {'x-access-token': token},
+        headers: {'x-access-token': token},
       };
       const userData = await doFetch(baseUrl + 'users/user', options);
       return userData;
@@ -95,7 +90,16 @@ const useUser = () => {
     }
   };
 
-  return {postRegister, checkToken};
+  const checkIsUserAvailable = async (username) => {
+    try {
+      const result = await doFetch(baseUrl + 'users/username/' + username);
+      return result.available;
+    } catch (error) {
+      throw new Error('apihooks checkIsUserAvailable', error.message);
+    }
+  };
+
+  return {postRegister, checkToken, checkIsUserAvailable};
 };
 
 const useTag = () => {
@@ -107,7 +111,7 @@ const useTag = () => {
       throw new Error(error.message);
     }
   };
-  return getFilesByTag;
+  return {getFilesByTag};
 };
 
 export {useLoadMedia, useLogin, useUser, useTag};

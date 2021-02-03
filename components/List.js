@@ -4,7 +4,7 @@ import {useLoadMedia} from '../hooks/ApiHooks';
 import ListItem from './ListItem';
 import PropTypes from 'prop-types';
 
-const List = (props) => {
+const List = ({navigation}) => {
   const mediaArray = useLoadMedia();
 
   return (
@@ -12,7 +12,7 @@ const List = (props) => {
       data={mediaArray}
       keyExtractor={(item, index) => index.toString()}
       renderItem={({item}) => (
-        <ListItem navigation={props.navigation} singleMedia={item} />
+        <ListItem navigation={navigation} singleMedia={item} />
       )}
     />
   );

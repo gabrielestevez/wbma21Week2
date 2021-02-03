@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 /* eslint-disable react/display-name */
-import React from 'react';
+import React, {useContext} from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createStackNavigator} from '@react-navigation/stack';
 import {
@@ -11,7 +11,6 @@ import Home from '../views/Home';
 import Profile from '../views/Profile';
 import Single from '../views/Single';
 import Login from '../views/Login';
-import {useContext} from 'react/cjs/react.development';
 import {MainContext} from '../contexts/MainContext';
 import {Icon} from 'react-native-elements';
 
@@ -20,9 +19,8 @@ const Stack = createStackNavigator();
 
 const TabScreen = () => {
   return (
-    <Tab.Navigator>
-      screenOptions=
-      {({route}) => ({
+    <Tab.Navigator
+      screenOptions={({route}) => ({
         tabBarIcon: ({focused, color, size}) => {
           let iconName;
           switch (route.name) {
@@ -36,6 +34,7 @@ const TabScreen = () => {
           return <Icon name={iconName} size={size} color={color} />;
         },
       })}
+    >
       <Tab.Screen name="Home" component={Home} />
       <Tab.Screen name="Profile" component={Profile} />
     </Tab.Navigator>
@@ -43,7 +42,7 @@ const TabScreen = () => {
 };
 
 const StackScreen = () => {
-  const [isLoggedIn] = useContext(MainContext);
+  const {isLoggedIn} = useContext(MainContext);
   return (
     <Stack.Navigator>
       {isLoggedIn ? (
@@ -52,14 +51,14 @@ const StackScreen = () => {
             name="Home"
             component={TabScreen}
             options={({route}) => ({
-              headerTitle: getFocusedRouteNameFromRoute,
+              headerTitle: getFocusedRouteNameFromRoute(route),
             })}
           />
           <Stack.Screen name="Single" component={Single} />
         </>
       ) : (
         <>
-          <StackScreen
+          <Stack.Screen
             name="Login"
             component={Login}
             options={() => ({

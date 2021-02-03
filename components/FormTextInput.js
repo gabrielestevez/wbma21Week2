@@ -6,7 +6,7 @@ const FormTextInput = ({style, ...otherProps}) => {
   return <Input style={style} {...otherProps} />;
 };
 
-FormTextInput.PropTypes = {
+FormTextInput.propTypes = {
   style: PropTypes.object,
 };
 
