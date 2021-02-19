@@ -1,6 +1,7 @@
 import axios from 'axios';
-import {useEffect, useState} from 'react';
-import {baseUrl} from '../utils/variables';
+import {useContext, useEffect, useState} from 'react';
+import {MainContext} from '../contexts/MainContext';
+import {appIdentifier, baseUrl} from '../utils/variables';
 
 // general function for fetching (options default value is empty object)
 const doFetch = async (url, options = {}) => {
@@ -18,26 +19,30 @@ const doFetch = async (url, options = {}) => {
   }
 };
 
-const useLoadMedia = () => {
+const useLoadMedia = (myFilesOnly, userId) => {
   const [mediaArray, setMediaArray] = useState([]);
+  const {update} = useContext(MainContext);
 
-  const loadMedia = async (limit = 5) => {
+  const loadMedia = async () => {
     try {
-      const listJson = await doFetch(baseUrl + 'media?limit=' + limit);
-      const media = await Promise.all(
+      const listJson = await doFetch(baseUrl + 'tags/' + appIdentifier);
+      let media = await Promise.all(
         listJson.map(async (item) => {
           const fileJson = await doFetch(baseUrl + 'media/' + item.file_id);
           return fileJson;
         })
       );
+      if (myFilesOnly) {
+        media = media.filter((item) => item.user_id === userId);
+      }
       setMediaArray(media);
     } catch (error) {
       console.error('loadMedia error', error.message);
     }
   };
   useEffect(() => {
-    loadMedia(10);
-  }, []);
+    loadMedia();
+  }, [update]);
   return mediaArray;
 };
 
@@ -91,6 +96,19 @@ const useUser = () => {
     }
   };
 
+  const getUser = async (id, token) => {
+    try {
+      const options = {
+        method: 'GET',
+        headers: {'x-access-token': token},
+      };
+      const userData = await doFetch(baseUrl + 'users/' + id, options);
+      return userData;
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  };
+
   const checkIsUserAvailable = async (username) => {
     try {
       const result = await doFetch(baseUrl + 'users/username/' + username);
@@ -100,7 +118,7 @@ const useUser = () => {
     }
   };
 
-  return {postRegister, checkToken, checkIsUserAvailable};
+  return {postRegister, checkToken, checkIsUserAvailable, getUser};
 };
 
 const useTag = () => {
@@ -112,7 +130,21 @@ const useTag = () => {
       throw new Error(error.message);
     }
   };
-  return {getFilesByTag};
+  const postTag = async (tag, token) => {
+    const options = {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'x-access-token': token},
+      body: JSON.stringify(tag),
+    };
+    try {
+      const result = await doFetch(baseUrl + 'tags', options);
+      return result;
+    } catch (error) {
+      throw new Error('postTag error: ' + error.message);
+    }
+  };
+
+  return {getFilesByTag, postTag};
 };
 
 const useMedia = () => {
@@ -131,7 +163,38 @@ const useMedia = () => {
       throw new Error(e.message);
     }
   };
-  return {upload};
+
+  const updateFile = async (fileId, fileInfo, token) => {
+    const options = {
+      method: 'PUT',
+      headers: {
+        'x-access-token': token,
+        'Content-type': 'application/json',
+      },
+      body: JSON.stringify(fileInfo),
+    };
+    try {
+      const result = await doFetch(baseUrl + 'media/' + fileId, options);
+      return result;
+    } catch (error) {
+      throw new Error('updateFile error: ' + error.message);
+    }
+  };
+
+  const deleteFile = async (fileId, token) => {
+    const options = {
+      method: 'DELETE',
+      headers: {'x-access-token': token},
+    };
+    try {
+      const result = await doFetch(baseUrl + 'media/' + fileId, options);
+      return result;
+    } catch (error) {
+      throw new Error('deleteFile error: ' + error.message);
+    }
+  };
+
+  return {upload, updateFile, deleteFile};
 };
 
 export {useLoadMedia, useLogin, useUser, useTag, useMedia};
